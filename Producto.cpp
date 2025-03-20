@@ -1,6 +1,5 @@
 #include <iostream>
 
-// Estudiantes: Liceth Yailineth Riascos Escobar - Leidy Melissa Giraldo Mina
 
 using namespace std;
 
