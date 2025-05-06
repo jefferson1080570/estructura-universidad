@@ -1,0 +1,190 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Definición del nodo del árbol
+struct Nodo {
+    char nombre[100];
+    int anio;
+    char genero[50];
+    float recaudacion;
+    struct Nodo* izquierda;
+    struct Nodo* derecha;
+};
+
+// Crear un nuevo nodo de película
+struct Nodo* crearNodo(char nombre[], int anio, char genero[], float recaudacion) {
+    struct Nodo* nuevo = (struct Nodo*)malloc(sizeof(struct Nodo));
+    strcpy(nuevo->nombre, nombre);
+    nuevo->anio = anio;
+    strcpy(nuevo->genero, genero);
+    nuevo->recaudacion = recaudacion;
+    nuevo->izquierda = NULL;
+    nuevo->derecha = NULL;
+    return nuevo;
+}
+
+// Insertar una película en el árbol
+struct Nodo* insertar(struct Nodo* raiz, char nombre[], int anio, char genero[], float recaudacion) {
+    if (raiz == NULL) {
+        return crearNodo(nombre, anio, genero, recaudacion);
+    }
+
+    // Si el año es menor o igual, insertamos a la izquierda
+    if (anio <= raiz->anio) {
+        raiz->izquierda = insertar(raiz->izquierda, nombre, anio, genero, recaudacion);
+    } else {
+        raiz->derecha = insertar(raiz->derecha, nombre, anio, genero, recaudacion);
+    }
+    return raiz;
+}
+
+// Mostrar recorrido Inorden (izquierda, raíz, derecha)
+void inorden(struct Nodo* raiz) {
+    if (raiz != NULL) {
+        inorden(raiz->izquierda);
+        printf("%s (%d) - %s - $%.2fM\n", raiz->nombre, raiz->anio, raiz->genero, raiz->recaudacion);
+        inorden(raiz->derecha);
+    }
+}
+
+// Mostrar recorrido Preorden (raíz, izquierda, derecha)
+void preorden(struct Nodo* raiz) {
+    if (raiz != NULL) {
+        printf("%s (%d) - %s - $%.2fM\n", raiz->nombre, raiz->anio, raiz->genero, raiz->recaudacion);
+        preorden(raiz->izquierda);
+        preorden(raiz->derecha);
+    }
+}
+
+// Mostrar recorrido Posorden (izquierda, derecha, raíz)
+void posorden(struct Nodo* raiz) {
+    if (raiz != NULL) {
+        posorden(raiz->izquierda);
+        posorden(raiz->derecha);
+        printf("%s (%d) - %s - $%.2fM\n", raiz->nombre, raiz->anio, raiz->genero, raiz->recaudacion);
+    }
+}
+
+// Buscar película por nombre
+void buscarPorNombre(struct Nodo* raiz, char nombre[]) {
+    if (raiz == NULL) return;
+
+    if (strcmp(raiz->nombre, nombre) == 0) {
+        printf("Película encontrada:\n");
+        printf("%s (%d) - %s - $%.2fM\n", raiz->nombre, raiz->anio, raiz->genero, raiz->recaudacion);
+        return;
+    }
+
+    buscarPorNombre(raiz->izquierda, nombre);
+    buscarPorNombre(raiz->derecha, nombre);
+}
+
+// Mostrar películas de un género específico
+void mostrarPorGenero(struct Nodo* raiz, char genero[]) {
+    if (raiz != NULL) {
+        mostrarPorGenero(raiz->izquierda, genero);
+        if (strcmp(raiz->genero, genero) == 0) {
+            printf("%s (%d) - $%.2fM\n", raiz->nombre, raiz->anio, raiz->recaudacion);
+        }
+        mostrarPorGenero(raiz->derecha, genero);
+    }
+}
+
+// Guardar todas las películas en un arreglo
+void guardarPeliculas(struct Nodo* raiz, struct Nodo* arreglo[], int* contador) {
+    if (raiz != NULL) {
+        guardarPeliculas(raiz->izquierda, arreglo, contador);
+        arreglo[(*contador)++] = raiz;
+        guardarPeliculas(raiz->derecha, arreglo, contador);
+    }
+}
+
+// Mostrar las 3 películas con menor recaudación
+void mostrarFracasos(struct Nodo* raiz) {
+    struct Nodo* peliculas[100];
+    int total = 0;
+    guardarPeliculas(raiz, peliculas, &total);
+
+    // Ordenar el arreglo por recaudación (burbuja simple)
+    for (int i = 0; i < total - 1; i++) {
+        for (int j = i + 1; j < total; j++) {
+            if (peliculas[i]->recaudacion > peliculas[j]->recaudacion) {
+                struct Nodo* temp = peliculas[i];
+                peliculas[i] = peliculas[j];
+                peliculas[j] = temp;
+            }
+        }
+    }
+
+    printf("Top 3 fracasos taquilleros:\n");
+    for (int i = 0; i < 3 && i < total; i++) {
+        printf("%s (%d) - %s - $%.2fM\n", peliculas[i]->nombre, peliculas[i]->anio, peliculas[i]->genero, peliculas[i]->recaudacion);
+    }
+}
+
+// Función principal con menú
+int main() {
+    struct Nodo* raiz = NULL;
+    int opcion;
+    char nombre[100], genero[50];
+    int anio;
+    float recaudacion;
+
+    do {
+        printf("\n--- MENÚ ---\n");
+        printf("1. Agregar película\n");
+        printf("2. Mostrar recorrido Inorden\n");
+        printf("3. Mostrar recorrido Preorden\n");
+        printf("4. Mostrar recorrido Posorden\n");
+        printf("5. Buscar película por nombre\n");
+        printf("6. Mostrar películas por género\n");
+        printf("7. Mostrar 3 fracasos taquilleros\n");
+        printf("0. Salir\n");
+        printf("Seleccione una opción: ");
+        scanf("%d", &opcion);
+        getchar(); // limpiar el buffer
+
+        switch (opcion) {
+            case 1:
+                printf("Nombre: "); fgets(nombre, 100, stdin); nombre[strcspn(nombre, "\n")] = 0;
+                printf("Año: "); scanf("%d", &anio); getchar();
+                printf("Género: "); fgets(genero, 50, stdin); genero[strcspn(genero, "\n")] = 0;
+                printf("Recaudación (millones): "); scanf("%f", &recaudacion);
+                raiz = insertar(raiz, nombre, anio, genero, recaudacion);
+                break;
+
+            case 2:
+                printf("\nRecorrido Inorden:\n");
+                inorden(raiz);
+                break;
+
+            case 3:
+                printf("\nRecorrido Preorden:\n");
+                preorden(raiz);
+                break;
+
+            case 4:
+                printf("\nRecorrido Posorden:\n");
+                posorden(raiz);
+                break;
+
+            case 5:
+                printf("Nombre a buscar: "); fgets(nombre, 100, stdin); nombre[strcspn(nombre, "\n")] = 0;
+                buscarPorNombre(raiz, nombre);
+                break;
+
+            case 6:
+                printf("Género a buscar: "); fgets(genero, 50, stdin); genero[strcspn(genero, "\n")] = 0;
+                mostrarPorGenero(raiz, genero);
+                break;
+
+            case 7:
+                mostrarFracasos(raiz);
+                break;
+        }
+
+    } while (opcion != 0);
+
+    return 0;
+}
