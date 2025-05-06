@@ -1,168 +1,190 @@
-#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-
-using namespace std;
-
+// Definición del nodo del árbol
 struct Nodo {
-    int id;
-    char nombre[30];
-    Nodo *sig;
+    char nombre[100];
+    int anio;
+    char genero[50];
+    float recaudacion;
+    struct Nodo* izquierda;
+    struct Nodo* derecha;
 };
 
-Nodo *cab, *aux, *aux2;
-
- //Esta es la funcion para poder resegistrar los datos de los prucctos
- 
-void registrar() {
-    aux = (struct Nodo *) malloc (sizeof(Nodo));
-    cout << "Ingrese ID del producto: ";
-    cin >> aux->id;
-    cout << "Ingrese nombre del producto: ";
-    cin >> ws; 
-    cin.getline(aux->nombre, 30);
-    aux->sig = NULL;
-    
-    if (!cab) {
-        cab = aux;
-    } else {
-        aux2 = cab;
-        while (aux2->sig)
-            aux2 = aux2->sig;
-        aux2->sig = aux;
-    }
-    cout << "Producto registrado con exito"<<endl;
+// Crear un nuevo nodo de película
+struct Nodo* crearNodo(char nombre[], int anio, char genero[], float recaudacion) {
+    struct Nodo* nuevo = (struct Nodo*)malloc(sizeof(struct Nodo));
+    strcpy(nuevo->nombre, nombre);
+    nuevo->anio = anio;
+    strcpy(nuevo->genero, genero);
+    nuevo->recaudacion = recaudacion;
+    nuevo->izquierda = NULL;
+    nuevo->derecha = NULL;
+    return nuevo;
 }
- //Esta funcion es para mostrar por pantalla
- 
-void mostrar() {
-    aux = cab;
-    if (!aux) {
-        cout << "No hay productos registrados"<<endl;
+
+// Insertar una película en el árbol
+struct Nodo* insertar(struct Nodo* raiz, char nombre[], int anio, char genero[], float recaudacion) {
+    if (raiz == NULL) {
+        return crearNodo(nombre, anio, genero, recaudacion);
+    }
+
+    // Si el año es menor o igual, insertamos a la izquierda
+    if (anio <= raiz->anio) {
+        raiz->izquierda = insertar(raiz->izquierda, nombre, anio, genero, recaudacion);
+    } else {
+        raiz->derecha = insertar(raiz->derecha, nombre, anio, genero, recaudacion);
+    }
+    return raiz;
+}
+
+// Mostrar recorrido Inorden (izquierda, raíz, derecha)
+void inorden(struct Nodo* raiz) {
+    if (raiz != NULL) {
+        inorden(raiz->izquierda);
+        printf("%s (%d) - %s - $%.2fM\n", raiz->nombre, raiz->anio, raiz->genero, raiz->recaudacion);
+        inorden(raiz->derecha);
+    }
+}
+
+// Mostrar recorrido Preorden (raíz, izquierda, derecha)
+void preorden(struct Nodo* raiz) {
+    if (raiz != NULL) {
+        printf("%s (%d) - %s - $%.2fM\n", raiz->nombre, raiz->anio, raiz->genero, raiz->recaudacion);
+        preorden(raiz->izquierda);
+        preorden(raiz->derecha);
+    }
+}
+
+// Mostrar recorrido Posorden (izquierda, derecha, raíz)
+void posorden(struct Nodo* raiz) {
+    if (raiz != NULL) {
+        posorden(raiz->izquierda);
+        posorden(raiz->derecha);
+        printf("%s (%d) - %s - $%.2fM\n", raiz->nombre, raiz->anio, raiz->genero, raiz->recaudacion);
+    }
+}
+
+// Buscar película por nombre
+void buscarPorNombre(struct Nodo* raiz, char nombre[]) {
+    if (raiz == NULL) return;
+
+    if (strcmp(raiz->nombre, nombre) == 0) {
+        printf("Película encontrada:\n");
+        printf("%s (%d) - %s - $%.2fM\n", raiz->nombre, raiz->anio, raiz->genero, raiz->recaudacion);
         return;
     }
-    while (aux) {
-        cout << "ID: " << aux->id << "  Nombre: " << aux->nombre << endl;
-        aux = aux->sig;
-    }
-}
- // Esta funcion es para buscar los nodos por ID
- 
-Nodo* buscar(int id) {
-    aux = cab;
-    while (aux) {
-        if (aux->id == id)
-            return aux;
-        aux = aux->sig;
-    }
-    return NULL;
-}
- // Esta funcion es para eliminar los nodos (los productos) por ID
- 
-void eliminar(int id) {
-     Nodo *aux = cab, *prev = NULL; 
-    while (aux && aux->id != id) {
-        prev = aux;
-        aux = aux->sig;
-    }
-    if (!aux) {
-        cout << "Producto no encontrado. ";
-        return;
-    }
-    if (!prev) {
-        cab = aux->sig;
-    } else {
-        prev->sig = aux->sig;
-    }
-    free(aux); // se usa para liberar memoria 
-    cout << "Producto eliminado con exito :)\n";
+
+    buscarPorNombre(raiz->izquierda, nombre);
+    buscarPorNombre(raiz->derecha, nombre);
 }
 
- // Esta funcion es para ver los  Productos que  hay reistrados
- 
-int contar() {
-    int contador = 0;
-    aux = cab;
-    while (aux) {
-        contador++;
-        aux = aux->sig;
-    }
-    return contador;
-}
- // Esta funcion es para modificar los productos
- 
-void modificar(int id) {
-    aux = buscar(id);
-    if (aux) {
-        cout << "Ingrese nuevo nombre: ";
-        cin >> ws;
-        cin.getline(aux->nombre, 30);
-        cout << "Producto modificado con exito! \n";
-    } else {
-        cout << "Producto no encontrado.\n";
-    }
-}
- //Esta funcon libera la memoria
- 
-void liberarMemoria() {
-    aux;
-    while (cab) {
-        aux = cab;
-        cab = cab->sig;
-        free(aux);
+// Mostrar películas de un género específico
+void mostrarPorGenero(struct Nodo* raiz, char genero[]) {
+    if (raiz != NULL) {
+        mostrarPorGenero(raiz->izquierda, genero);
+        if (strcmp(raiz->genero, genero) == 0) {
+            printf("%s (%d) - $%.2fM\n", raiz->nombre, raiz->anio, raiz->recaudacion);
+        }
+        mostrarPorGenero(raiz->derecha, genero);
     }
 }
 
+// Guardar todas las películas en un arreglo
+void guardarPeliculas(struct Nodo* raiz, struct Nodo* arreglo[], int* contador) {
+    if (raiz != NULL) {
+        guardarPeliculas(raiz->izquierda, arreglo, contador);
+        arreglo[(*contador)++] = raiz;
+        guardarPeliculas(raiz->derecha, arreglo, contador);
+    }
+}
+
+// Mostrar las 3 películas con menor recaudación
+void mostrarFracasos(struct Nodo* raiz) {
+    struct Nodo* peliculas[100];
+    int total = 0;
+    guardarPeliculas(raiz, peliculas, &total);
+
+    // Ordenar el arreglo por recaudación (burbuja simple)
+    for (int i = 0; i < total - 1; i++) {
+        for (int j = i + 1; j < total; j++) {
+            if (peliculas[i]->recaudacion > peliculas[j]->recaudacion) {
+                struct Nodo* temp = peliculas[i];
+                peliculas[i] = peliculas[j];
+                peliculas[j] = temp;
+            }
+        }
+    }
+
+    printf("Top 3 fracasos taquilleros:\n");
+    for (int i = 0; i < 3 && i < total; i++) {
+        printf("%s (%d) - %s - $%.2fM\n", peliculas[i]->nombre, peliculas[i]->anio, peliculas[i]->genero, peliculas[i]->recaudacion);
+    }
+}
+
+// Función principal con menú
 int main() {
-    int opcion, id;
+    struct Nodo* raiz = NULL;
+    int opcion;
+    char nombre[100], genero[50];
+    int anio;
+    float recaudacion;
+
     do {
-        cout << "\nMenu: "<<endl;
-        cout << "1. Agregar producto"<<endl;
-        cout << "2. Mostrar productos"<<endl;
-        cout << "3. Buscar producto"<<endl;
-        cout << "4. Eliminar producto"<<endl;
-        cout << "5. Contar productos"<<endl;
-        cout << "6. Modificar producto"<<endl;
-        cout << "7. Salir"<<endl;
-        cout << "Seleccione una opcion: ";
-        cin >> opcion;
+        printf("\n--- MENÚ ---\n");
+        printf("1. Agregar película\n");
+        printf("2. Mostrar recorrido Inorden\n");
+        printf("3. Mostrar recorrido Preorden\n");
+        printf("4. Mostrar recorrido Posorden\n");
+        printf("5. Buscar película por nombre\n");
+        printf("6. Mostrar películas por género\n");
+        printf("7. Mostrar 3 fracasos taquilleros\n");
+        printf("0. Salir\n");
+        printf("Seleccione una opción: ");
+        scanf("%d", &opcion);
+        getchar(); // limpiar el buffer
+
         switch (opcion) {
             case 1:
-                registrar();
+                printf("Nombre: "); fgets(nombre, 100, stdin); nombre[strcspn(nombre, "\n")] = 0;
+                printf("Año: "); scanf("%d", &anio); getchar();
+                printf("Género: "); fgets(genero, 50, stdin); genero[strcspn(genero, "\n")] = 0;
+                printf("Recaudación (millones): "); scanf("%f", &recaudacion);
+                raiz = insertar(raiz, nombre, anio, genero, recaudacion);
                 break;
+
             case 2:
-                mostrar();
+                printf("\nRecorrido Inorden:\n");
+                inorden(raiz);
                 break;
+
             case 3:
-                cout << "Ingrese ID del producto a buscar: ";
-                cin >> id;
-                if (Nodo *L = buscar(id)) {
-                    cout << "Producto encontrado - ID: " << L->id << " - Nombre: " << L->nombre << endl;
-                } else {
-                    cout << "Producto no encontrado."<<endl;
-                }
+                printf("\nRecorrido Preorden:\n");
+                preorden(raiz);
                 break;
+
             case 4:
-                cout << "Ingrese ID del producto a eliminar: ";
-                cin >> id;
-                eliminar(id);
+                printf("\nRecorrido Posorden:\n");
+                posorden(raiz);
                 break;
+
             case 5:
-                cout << "Total de productos registrados: " << contar() << endl;
+                printf("Nombre a buscar: "); fgets(nombre, 100, stdin); nombre[strcspn(nombre, "\n")] = 0;
+                buscarPorNombre(raiz, nombre);
                 break;
+
             case 6:
-                cout << "Ingrese ID del producto a modificar: ";
-                cin >> id;
-                modificar(id);
+                printf("Género a buscar: "); fgets(genero, 50, stdin); genero[strcspn(genero, "\n")] = 0;
+                mostrarPorGenero(raiz, genero);
                 break;
+
             case 7:
-                liberarMemoria();
-                cout << "Memoria liberada."<<endl;
-                cout<<"Saliendo..."<<endl;
+                mostrarFracasos(raiz);
                 break;
-            default:
-                cout << "Opcion invalida. Intente de nuevo."<<endl;
         }
-    } while (opcion != 7);
-    
+
+    } while (opcion != 0);
+
     return 0;
 }
